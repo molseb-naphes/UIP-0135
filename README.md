@@ -23,7 +23,7 @@ This Urbit Improvement Proposal (UIP) outlines the integration of NIST-standardi
 
 The proposal introduces the "httpz" protocol, an Ames-based, HTTP-like protocol aligned with RFC-9421 (HTTP Message Signatures), using ML-KEM for key encapsulation, ML-DSA for signatures, and SNARKs for ZK proofs of request/response integrity.
 
-This serves as a testbed for future internet-wide adoption of a quantum-safe, ZK-enhanced protocol... httpz
+This serves as a testbed for future internet-wide adoption of a quantum-safe, ZK-enhanced protocol... ://httpz
 
 ---
 
