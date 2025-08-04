@@ -1,10 +1,10 @@
 
 
-# UIP-0135: Post-Quantum & Zero-Knowledge "httpz" Protocol for UrbitOS
+# UIP-0135: Post-Quantum, Zero-Knowledge & Multi Party Computation networking - "httpz" 
 
-## Metadata
 
-| Field      | Value                                                |
+
+|            |                                                      |
 |------------|------------------------------------------------------|
 | UIP        | 0135                                                 |
 | Title      | Post-Quantum and Zero-Knowledge "httpz" Protocol     |
@@ -19,121 +19,164 @@
 
 ## Abstract
 
-This Urbit Improvement Proposal (UIP) outlines the integration of NIST-standardized post-quantum (PQ) cryptographic algorithms (ML-KEM and ML-DSA) and zero-knowledge (ZK) proofs (SNARKs/STARKs) into UrbitOS to ensure quantum-resistant, privacy-preserving networking.
-
-The proposal introduces the "httpz" protocol, an Ames-based, HTTP-like protocol aligned with RFC-9421 (HTTP Message Signatures), using ML-KEM for key encapsulation, ML-DSA for signatures, and SNARKs for ZK proofs of request/response integrity.
-
-This serves as a testbed for future internet-wide adoption of a quantum-safe, ZK-enhanced protocol... ://httpz
+This Urbit Improvement Proposal (UIP) outlines the integration of NIST-standardized post-quantum (PQ) cryptographic algorithms, zero-knowledge proofs (ZKP), and secure multi-party computation (MPC) into urbitOS to ensure quantum-resistant, privacy-preserving, and collaborative networking.
+The proposal introduces the "httpz" protocol, an Ames-based, HTTP-like protocol aligned with RFC-9421 (HTTP Message Signatures), using ML-KEM for key encapsulation, ML-DSA for signatures, SNARKs for ZK proofs of request/response integrity, and MP-SPDZ framework for secure multi-party computations as a comprehensive networking protocol stack for urbitOS.
+This serves as a testbed for future internet-wide adoption of a quantum-safe, ZK-enhanced, MPC-enabled transport layer protocol: ://httpz
 
 ---
 
 ## Motivation
 
-### Quantum Threat and Privacy Needs
+### The Quantum Threat and Privacy Revolution
+Quantum computers pose an existential threat to current public-key cryptography, with cryptographically relevant quantum computers potentially emerging within 10-20 years. Simultaneously, the need for privacy-preserving collaborative computation is driving demand for secure multi-party computation protocols.
 
-Quantum computers, potentially viable within 10–20 years, threaten current public-key cryptography (ECDH, ECDSA) via Shor’s algorithm. Urbit’s vision as a "100-year computer" requires proactive quantum resistance.
-
-Additionally, privacy-preserving protocols are increasingly critical for secure, decentralized networks. The "httpz" protocol combines PQ cryptography with ZK proofs to protect ship identities, network integrity, and data privacy while aligning with emerging standards like RFC-9421.
+Current Limitations
+Urbit's existing infrastructure lacks:
+-	•	Quantum Resistance: ECDH/ECDSA vulnerable to Shor's algorithm
+-	•	Privacy-Preserving Computation: No framework for collaborative computation without revealing inputs
+-	•	Verifiable Computation: Limited ability to prove computational correctness without revealing data
+-	•	Secure Aggregation: No mechanism for ships to jointly compute functions over private data
 
 ### Strategic Importance
 
-- **Future-Proofing**: Ensures Urbit’s security against quantum attacks.  
-- **Privacy**: ZK proofs enable verifiable computation without revealing sensitive data.  
-- **Standards Alignment**: Positions Urbit as a testbed for RFC-9421-compliant, ZK-enhanced protocols.  
-- **Network Integrity**: Secures Ames-based communication for ship-to-ship interactions.
+- - **Future-Proofing**: Quantum-resistant cryptography ensures long-term security
+-	-	**Privacy Revolution**: MPC enables parties to jointly compute functions over private inputs while keeping those inputs secret
+-	-	**Collaborative Intelligence**: Ships can perform secure computations without centralised trust
+-	-	**Verifiable Systems**: ZK proofs ensure computational integrity
+-	-	**Decentralised Infrastructure**: MP-SPDZ framework provides versatile MPC protocol implemenations
 
 ---
 
-## Specification
+### Specification
 
-### Cryptographic Primitives
+## Detailed Design
 
-#### ML-KEM (FIPS 203)
+Cryptographic Algorithm Selection
 
-Module-Lattice-Based Key Encapsulation Mechanism (Level 3, ML-KEM-768)
+ML-KEM (Module-Lattice-Based Key Encapsulation Mechanism)
+-	•	Standard: FIPS 203
+-	•	Security Level: ML-KEM-768 (NIST Level 3 equivalent)
+-	•	Performance: Optimized for network protocols
+-	•	Key Sizes: Public key 1,184 bytes, Ciphertext 1,088 bytes
+ 
+ML-DSA (Module-Lattice-Based Digital Signature Algorithm)
+-	•	Standard: FIPS 204 (Dilithium)
+-	•	Security Level: ML-DSA-65 (NIST Level 3 equivalent)
+-	•	Performance: Suitable for authentication protocols
+-	•	Signature Size: ~3,309 bytes (variable)
+ 
+Multi-Party Computation (MP-SPDZ Framework)
+Core MPC Capabilities
+-	•	Secret Sharing: Enables multiple parties to jointly compute a function over their inputs while keeping those inputs private
+-	•	Protocol Variants: MP-SPDZ implements 34 MPC protocol variants with the same high-level programming interface
+-	•	Security Models: Support for semi-honest and malicious adversaries
+-	•	Computation Types: Arithmetic circuits, Boolean circuits, garbled circuits
 
-| Parameter       | Size      |
-|----------------|-----------|
-| Public key     | 1,184 B   |
-| Ciphertext     | 1,088 B   |
-| Shared secret  | 32 B      |
+Supported MPC protocols 
+<img width="691" height="160" alt="Screenshot 2025-08-04 at 13 51 10" src="https://github.com/user-attachments/assets/bcad763b-c06f-431c-b19c-c4e7d02dea8f" />
 
-#### ML-DSA (FIPS 204)
 
-Module-Lattice-Based Digital Signature Algorithm (Level 3, ML-DSA-65)
-
-| Parameter       | Size      |
-|----------------|-----------|
-| Public key     | 1,952 B   |
-| Signature      | ~3,309 B  |
-
-#### SNARKs (Groth16)
-
-| Property        | Value     |
-|----------------|-----------|
-| Proof type     | Succinct ZK (SHA-256 hash) |
-| Proof size     | ~2 KB     |
-
-#### STARKs (Optional)
-
-| Property        | Value     |
-|----------------|-----------|
-| Proof size     | ~10–50 KB |
-| Notes          | Transparent, no trusted setup |
-
----
-
-## "httpz" Protocol
-
-### Transport
-
-Uses the Ames vane, leveraging Urbit’s P2P networking.
-
-### Packet Format
-
-```
-[version:1][crypto_suite:1][header:32][pq_kem_data:1088][zk_proof:2048][payload:*][pq_signature:3309]
-```
-
-- `crypto_suite`: 0x03 for "httpz" (PQ + ZK)
-- `zk_proof`: SNARK verifying payload integrity
-- `payload`: Encrypted JSON, per RFC-9421 `@http-message`
-
-### Handshake
-
-1. **Ship A** sends ML-KEM public key + SNARK proof of identity  
-2. **Ship B** verifies proof, encapsulates session key, signs with ML-DSA  
-3. Session key encrypts further payloads
-
-### RFC-9421 Compliance
-
-- ML-DSA → `pq_signature`  
-- SNARK → `ZK-Proof` header
+MPC Applications in Urbit
+-	•	Federated Analytics: Ships aggregate statistics without revealing individual data
+-	•	Collaborative Filtering: Recommend content based on collective preferences
+-	•	Threshold Signatures: Require multiple ships to authorize critical operations
+-	•	Private Set Intersection: Ships find common interests without revealing full sets
+-	•	Secure Auctions: Bid on resources without revealing bid amounts
 
 ---
 
 ## Integration Points
-
+1. Runtime
 ### Vere Runtime (C)
+```c
+// Enhanced crypto interface in c/vere.h
+typedef struct {
+  c3_y* pub_key;    // ML-KEM public key
+  c3_y* sec_key;    // ML-KEM secret key (optional)
+  c3_w  key_size;   // Key size in bytes
+} u3_mlkem_keys;
 
-- ML-KEM/ML-DSA via `liboqs`
-- SNARKs via `libsnark`
+typedef struct {
+  c3_y* signature;  // ML-DSA signature
+  c3_w  sig_size;   // Signature size in bytes
+} u3_mldsa_sig;
 
+// New MPC computation context
+typedef struct {
+  c3_w party_id;          // This ship's party ID
+  c3_w num_parties;       // Total number of parties
+  c3_y* shared_secret;    // MPC shared secret
+  c3_w protocol_type;     // MPC protocol variant (MASCOT, Semi2k, etc.)
+} u3_mpc_context;
+```
+Dependencies:
+-	•	liboqs (Open Quantum Safe library)
+-	•	libsnark (Zero-knowledge proofs)
+-	•	MP-SPDZ framework integration
+-	•	Integration with existing crypto in c/ames.c
+2. Kernel
 ### Arvo Kernel (Hoon)
+```hoon
+::  /sys/zuse.hoon - Extended crypto cores
+++  mlkem
+  |%
+  ++  keygen  ^-  [pub=@ sec=@]
+  ++  encaps  |=  pub=@  ^-  [key=@ cipher=@]
+  ++  decaps  |=  [sec=@ cipher=@]  ^-  (unit @)
+  --
+++  mldsa  
+  |%
+  ++  keygen  ^-  [pub=@ sec=@]
+  ++  sign    |=  [sec=@ msg=@]  ^-  @
+  ++  verify  |=  [pub=@ msg=@ sig=@]  ^-  ?
+  --
+++  mpc
+  |%
+  ++  init-computation  |=  [parties=(list @p) protocol=@tas]  ^-  @
+  ++  secret-share     |=  [value=@ num-parties=@ud]  ^-  (list @)
+  ++  reconstruct      |=  shares=(list [@ud @])  ^-  (unit @)
+  ++  secure-add       |=  [share-a=@ share-b=@]  ^-  @
+  ++  secure-multiply  |=  [share-a=@ share-b=@]  ^-  @
+  ++  reveal-result    |=  [computation-id=@ shares=(list @)]  ^-  (unit @)
+  --
+++  zkp
+  |%
+  ++  prove    |=  [circuit=@ witness=@ pub-input=@]  ^-  @
+  ++  verify   |=  [circuit=@ proof=@ pub-input=@]  ^-  ?
+  --
+```
 
-- Extend Zuse with `mlkem`, `mldsa`, and `zk` cores  
-- Update Ames for `httpz` packet handling
+3. Ames Networking Protocol
+-	•	Packet Format Extension: New header fields for MPC session coordination
+-	•	Handshake Protocol: Hybrid classical/PQ key exchange + MPC party discovery
+-	•	Encryption Pipeline: ML-KEM derived keys with AES + MPC secret sharing
+-	•	Computation Routing: Direct MPC computation messages between participating ships
 
-### Jael (Identity)
+5. Jael Identity Management
+-	•	Key Storage: Extended to include PQ keypairs + MPC party credentials
+-	•	Ship Spawning: Generate both classical, PQ, and MPC identity keys
+-	•	Key Rotation: Automated PQ key lifecycle management + MPC re-keying
+-	•	Party Authentication: Verify MPC participants using ML-DSA signatures
 
-- Store PQ + ZK keypairs  
-- Add support for key rotation
-
-### Ames (Networking)
-
-- Add crypto suite `0x03`  
-- Implement hybrid handshake support
-
+5. MPC Vane (%mpc)
+```
+::  /sys/vane/mpc.hoon - Multi-Party Computation coordination
+|%
+++  mpc-session
+  $:  session-id=@
+      parties=(set @p)
+      protocol=@tas  :: MASCOT, Semi2k, BMR, etc.
+      computation=@  :: Circuit description
+      status=@tas    :: %init %setup %compute %complete
+  ==
+++  mpc-share
+  $:  party=@p
+      share-id=@
+      encrypted-share=@
+      proof=@  :: ZK proof of correct sharing
+  ==
+--
+```
 ---
 
 ## Code Implementation
@@ -146,98 +189,75 @@ Uses the Ames vane, leveraging Urbit’s P2P networking.
 #include <oqs/oqs.h>
 #include <libsnark/zk_proof_systems/ppzksnark/r1cs_gg_ppzksnark.hpp>
 #include <libsnark/common/default_types/r1cs_gg_ppzksnark_pp.hpp>
+// … ML‑KEM and ML‑DSA parameters same as before …
 
-// ML-KEM-768 parameters
-#define MLKEM_PUBLICKEY_BYTES 1184
-#define MLKEM_SECRETKEY_BYTES 2400
-#define MLKEM_CIPHERTEXT_BYTES 1088
-#define MLKEM_SHARED_SECRET_BYTES 32
+// New MPC context
+typedef struct {
+  c3_w party_id;
+  c3_w num_parties;
+  c3_y* shared_secret;    // pre‑shared / reconstructed secret
+  c3_w protocol_type;     // enum for MPC protocol variant
+} u3_mpc_context;
 
-// ML-DSA-65 parameters
-#define MLDSA_PUBLICKEY_BYTES 1952
-#define MLDSA_SECRETKEY_BYTES 4000
-#define MLDSA_SIGNATURE_BYTES 3309
+// MPC key generation context: perform distributed ML‑KEM keygen
+c3_o u3_mpc_mlkem_init(u3_mpc_context* ctx,
+                       c3_w party_id, c3_w num_parties,
+                       c3_w protocol_type) {
+  ctx->party_id = party_id;
+  ctx->num_parties = num_parties;
+  ctx->protocol_type = protocol_type;
+  ctx->shared_secret = c3_malloc(MLKEM_SHARED_SECRET_BYTES);
+  return c3y;
+}
 
-// SNARK parameters
-#define ZK_PROOF_BYTES 2048
-
-// ML-KEM key generation
-c3_o u3_mlkem_keygen(c3_y* pub_key, c3_y* sec_key) {
-  OQS_KEM* kem = OQS_KEM_new(OQS_KEM_alg_ml_kem_768);
-  if (!kem) {
-    u3l_log("mlkem: failed to initialize ML-KEM-768\n");
-    return c3n;
-  }
-  OQS_STATUS status = OQS_KEM_keypair(kem, pub_key, sec_key);
-  OQS_KEM_free(kem);
-  if (status != OQS_SUCCESS) {
-    u3l_log("mlkem: key generation failed with OQS error %d\n", status);
-    return c3n;
+// MPC additive secret share generator
+c3_o u3_mpc_secret_share(const c3_y* full_secret,
+                         c3_y* out_share, size_t len) {
+  for (size_t i = 0; i < len; i++) {
+    out_share[i] = rand() % 256;
   }
   return c3y;
 }
 
-// ML-KEM encapsulation
-c3_o u3_mlkem_encaps(const c3_y* pub_key, c3_y* cipher, c3_y* shared_secret) {
-  OQS_KEM* kem = OQS_KEM_new(OQS_KEM_alg_ml_kem_768);
-  if (!kem) {
-    u3l_log("mlkem: failed to initialize ML-KEM-768\n");
-    return c3n;
-  }
-  OQS_STATUS status = OQS_KEM_encaps(kem, cipher, shared_secret, pub_key);
-  OQS_KEM_free(kem);
-  if (status != OQS_SUCCESS) {
-    u3l_log("mlkem: encapsulation failed with OQS error %d\n", status);
-    return c3n;
+// MPC reconstruction (simple additive)
+c3_o u3_mpc_reconstruct(u3_y* combined, c3_y** shares,
+                        size_t n_shares, size_t len) {
+  memset(combined, 0, len);
+  for (size_t j = 0; j < n_shares; j++) {
+    for (size_t i = 0; i < len; i++) {
+      combined[i] = (combined[i] + shares[j][i]) % 256;
+    }
   }
   return c3y;
 }
 
-// ML-DSA signing
-c3_o u3_mldsa_sign(const c3_y* sec_key, const c3_y* message, c3_w msg_len,
-                   c3_y* signature, c3_w* sig_len) {
-  OQS_SIG* sig = OQS_SIG_new(OQS_SIG_alg_ml_dsa_65);
-  if (!sig) {
-    u3l_log("mldsa: failed to initialize ML-DSA-65\n");
-    return c3n;
-  }
-  size_t signature_len = *sig_len;
-  OQS_STATUS status = OQS_SIG_sign(sig, signature, &signature_len, message, msg_len, sec_key);
-  *sig_len = (c3_w)signature_len;
-  OQS_SIG_free(sig);
-  if (status != OQS_SUCCESS) {
-    u3l_log("mldsa: signing failed with OQS error %d\n", status);
-    return c3n;
+// Bindings to integrate MPC with ML‑KEM keygen
+c3_o u3_mpc_mlkem_keygen(u3_mpc_context* ctx,
+                         c3_y* pub_key,
+                         c3_y** share_out, size_t n_shares) {
+  // Perform normal ML‑KEM locally
+  c3_y full_sec[MLKEM_SECRETKEY_BYTES];
+  if (!u3_mlkem_keygen(pub_key, full_sec)) return c3n;
+  // Generate shares
+  for (size_t j = 0; j < n_shares; j++) {
+    u3_mpc_secret_share(full_sec, share_out[j], MLKEM_SECRETKEY_BYTES);
   }
   return c3y;
 }
 
-// SNARK proof generation (stub for SHA-256 hash verification)
-typedef libsnark::r1cs_gg_ppzksnark<libsnark::default_r1cs_gg_ppzksnark_pp> snark_t;
-static snark_t::keypair_type* zk_keypair = nullptr;
-
-void u3_init_zk(void) {
-  libsnark::default_r1cs_gg_ppzksnark_pp::init_public_params();
-  // TODO: Load SNARK keypair (trusted setup)
+// MPC‑enhanced signing: each party signs partial data + combine
+c3_o u3_mpc_mldsa_sign(const c3_y* sec_share, const c3_y* message,
+                       c3_w msg_len, c3_y* signature,
+                       c3_w* sig_len) {
+  // Each party computes a partial signature or commitment,
+  // then external share‑combine logic invoked by MPC context.
+  // Here, call standard sign as placeholder
+  return u3_mldsa_sign(sec_share, message, msg_len, signature, sig_len);
 }
 
-c3_y* u3_zk_prove(const c3_y* stmt, c3_w stmt_len, const c3_y* witness, c3_w wit_len, c3_w* proof_len) {
-  if (!zk_keypair || !stmt || !witness || !proof_len) return NULL;
-  // Construct circuit: Prove SHA-256(witness) == stmt
-  // TODO: Define actual circuit
-  c3_y* proof_bytes = c3_malloc(ZK_PROOF_BYTES);
-  *proof_len = ZK_PROOF_BYTES;
-  // TODO: Generate and serialize SNARK proof
-  return proof_bytes;
-}
+// SNARK logic unchanged
+// … u3_init_zk(), u3_zk_prove(), u3_zk_verify() as before …
 
-c3_o u3_zk_verify(const c3_y* stmt, c3_w stmt_len, const c3_y* proof, c3_w proof_len) {
-  if (!zk_keypair || !stmt || !proof) return c3n;
-  // TODO: Deserialize and verify SNARK proof
-  return c3y;
-}
-
-// Hoon interfaces (omitted for brevity, see original UIP-0134)
 ```
 </details>
 
@@ -245,83 +265,66 @@ c3_o u3_zk_verify(const c3_y* stmt, c3_w stmt_len, const c3_y* proof, c3_w proof
 <summary><strong>Arvo Kernel (Hoon)</strong></summary>
 
 ```hoon
-::  Post-Quantum and Zero-Knowledge Cryptography for Urbit
+:: Multi-party interfaces for ML‑KEM, ML‑DSA and MPC
 /+  *zuse
 |%
 +$  keypair  [pub=@ sec=@]
++$  mpc-context  [party-id=@ud num-parties=@ud protocol=@tas]
 +$  capsule  [key=@ cipher=@]
++$  mldsa-sig  [sig=@ sig-ctx=@]
 +$  httpz-packet
   $:  version=@ud
       crypto-suite=@ux
-      header=@ux
       pq-kem-data=@ux
+      mpc-context=@ux
       zk-proof=@ux
       payload=@ux
+      mpc-share=@ux
       pq-signature=@ux
   ==
-++  mlkem
+++  mpc
   |%
+  ++  init
+    |=  [party-id=@ud num-parties=@ud protocol=@tas]
+    ^-  mpc-context
+    =/  ctx  (u3we_mpc_mlkem_init (u3xyz party-id num-parties protocol))
+    ?~  ctx  !!  :: init failure crashes
+    ctx
   ++  keygen
-    ^-  keypair
-    =/  result  (u3we_mlkem_keygen *u3_noun)
-    ?~  result  !!  :: Crash on failure
-    =/  [pub=@ sec=@]  (u3x_cell result)
-    [pub sec]
-  ++  encaps
-    |=  pub=@
-    ^-  capsule
-    =/  result  (u3we_mlkem_encaps pub)
-    ?~  result  !!  :: Crash on failure
-    =/  [key=@ cipher=@]  (u3x_cell result)
-    [key cipher]
-  ++  decaps
-    |=  [sec=@ cipher=@]
-    ^-  (unit @)
-    =/  result  (u3we_mlkem_decaps (u3nc sec cipher))
-    ?~  result  ~
-    `result
-  --
-++  mldsa
-  |%
-  ++  keygen
-    ^-  keypair
-    =/  result  (u3we_mldsa_keygen *u3_noun)
-    ?~  result  !!  :: Crash on failure
-    =/  [pub=@ sec=@]  (u3x_cell result)
-    [pub sec]
-  ++  sign
-    |=  [sec=@ msg=@]
+    |=  ctx=mpc-context
+    ^-  [pub=@ shares=(list @)]  :: output shares for all parties
+    =/  result  (u3we_mpc_mlkem_keygen ctx)
+    ?~  result  !!  
+    =/  [pub shares]  (u3x_cell result)
+    [pub shares]
+  ++  reconstruct
+    |=  shares=(list @)
     ^-  @
-    =/  result  (u3we_mldsa_sign (u3nc sec msg))
-    ?~  result  0  :: Return 0 on failure
+    =/  result  (u3we_mpc_reconstruct (u3nc shares ~))
+    ?~  result  !!  
+    result
+  ++  sign
+    |=  [ctx=mpc-context msg=@ shares=(list @)]
+    ^-  mldsa-sig
+    =/  result  (u3we_mpc_mldsa_sign (u3nc ctx (u3nc msg shares)))
+    ?~  result  !!  
     result
   ++  verify
     |=  [pub=@ msg=@ sig=@]
     ^-  ?
-    =/  result  (u3we_mldsa_verify (u3nt pub msg sig))
+    =/  result  (u3we_mldsa_verify (u3nc pub (u3nc msg sig)))
     =(result c3y)
   --
+++  mlkem
+  // existing bindings
+--  
+++  mldsa
+  // existing bindings
+--  
 ++  zk
-  |%
-  ++  prove
-    |=  [stmt=@ witness=@]
-    ^-  @
-    =/  result  (u3we_zk_prove (u3nc stmt witness))
-    ?~  result  0
-    result
-  ++  verify
-    |=  [stmt=@ proof=@]
-    ^-  ?
-    =/  result  (u3we_zk_verify (u3nc stmt proof))
-    =(result c3y)
-  --
-++  hybrid
-  |%
-  ++  combine-secrets
-    |=  [classical=@ quantum=@]
-    ^-  @
-    (mix classical quantum)
-  --
+  // existing bindings
+--
+
 ```
 </details>
 
@@ -331,206 +334,316 @@ c3_o u3_zk_verify(const c3_y* stmt, c3_w stmt_len, const c3_y* proof, c3_w proof
 ```hoon
 /+  *ames, crypto=urbit-crypto
 |%
-+$  httpz-action
-  $%  [%send-httpz to=@p path=@t data=json]
-      [%verify-httpz from=@p packet=httpz-packet]
++$  mpc-action
+  $%  [%init keygen ctx=mpc-context participants=(list @p)]
+      [%share from=@p to=@p id=@ud data=@]
+      [%sign msg=@ ctx=mpc-context participants=(list @p)]
   ==
-+$  httpz-response
-  $%  [%result json=json]
-      [%error code=@ud msg=@t]
-  ==
-++  httpz-crypto
-  |%
-  ++  keygen  (keygen:mlkem:crypto)
-  ++  encaps  (encaps:mlkem:crypto)
-  ++  decaps  (decaps:mlkem:crypto)
-  ++  sign    (sign:mldsa:crypto)
-  ++  verify  (verify:mldsa:crypto)
-  ++  zk-prove  (prove:zk:crypto)
-  ++  zk-verify (verify:zk:crypto)
-  --
---
-|_  $:  bowl:gall
-        state=ames-state
-    ==
-++  this  .
+
 ++  on-poke
   |=  [=mark =vase]
   ^-  (quip card _this)
   ?+  mark  [~ this]
-      %httpz-action
-    =/  act  !<(httpz-action vase)
+      %mpc-action
+    =/  act  !<(mpc-action vase)
     ?-  -.act
-        %send-httpz
-      =/  keys  (keygen:httpz-crypto)
-      =/  capsule  (encaps:httpz-crypto (get-pub-key:jael to.act))
-      =/  stmt  (hash-payload data.act)
-      =/  proof  (zk-prove:httpz-crypto stmt (encode-witness data.act))
-      =/  sig  (sign:httpz-crypto [sec.keys (hash-packet path.act proof data.act)])
-      =/  packet  :*  version=1
-                      crypto-suite=0x03
-                      header=0x0
-                      pq-kem-data=cipher.capsule
-                      zk-proof=proof
-                      payload=(encrypt-payload key.capsule data.act)
-                      pq-signature=sig
-                  ==
-      :_  this
-      :~  [%pass /httpz %send to.act packet]
-      ==
-        %verify-httpz
-      =/  packet  packet.act
-      =/  pub  (get-pub-key:jael from.act)
-      =/  valid-sig  (verify:httpz-crypto [pub (hash-packet path.packet proof.packet payload.packet) pq-signature.packet])
-      =/  valid-proof  (zk-verify:httpz-crypto (hash-payload payload.packet) zk-proof.packet)
-      =/  session-key  (decaps:httpz-crypto [sec.our-keys pq-kem-data.packet])
-      ?~  session-key
-        :_  this
-        :~  [%give %httpz-response [%error 400 'Decapsulation Failed']]
-        ==
-      ?.  ?&(valid-sig valid-proof)
-        :_  this
-        :~  [%give %httpz-response [%error 401 'Invalid Signature or Proof']]
-        ==
-      =/  json  (decrypt-payload u.session-key payload.packet)
-      :_  this
-      :~  [%give %httpz-response [%result json]]
-      ==
+      %init
+        :: broadcast init to participants
+      %share
+        :: forward share fragments
+      %sign
+        :: collect shares then call reconstruct + sign
     ==
-  ==
-++  on-agent
-  |=  [=wire =sign:agent]
-  ^-  (quip card _this)
-  ?+  wire  [~ this]
-      [%httpz ~]
-    ?+  -.sign  [~ this]
-        %fact
-      =/  packet  !<(httpz-packet q.cage.sign)
-      :_  this
-      :~  [%pass /httpz %httpz-action !>([%verify-httpz src.bowl packet])]
-      ==
-    ==
-  ==
-++  on-arvo
-  |=  [=wire =sign-arvo]
-  ^-  (quip card _this)
-  [~ this]
-++  on-init
-  ^-  (quip card _this)
-  [~ this]
-++  on-save  ^-  vase  !>(state)
-++  on-load
-  |=  old=vase
-  ^-  (quip card _this)
-  [~ this(state !<(ames-state old))]
-++  on-leave  |=(path [~ this])
-++  on-peek   |=(path ~)
-++  on-fail   |=(=term =tang [~ this])
----
+
 ```
 </details>
----
+
 ## Migration Strategy
 
-| Phase               | Description                                           | 
-|---------------------|-------------------------------------------------------|
-| Phase 1: Hybrid     | PQ + classical + ZK supported                         | 
-| Phase 2: Preferred  | Ships default to httpz (0x03)                         | 
-| Phase 3: Mandatory  | httpz-only networking                                 | 
-
+Phase 1: Hybrid Implementation (Months 1-6)
+-	•	Ships support classical, PQ, and basic MPC protocols
+-	•	Backward compatibility maintained
+-	•	Gradual network adoption of httpz protocol
+-	•	Simple MPC computations (secure addition, multiplication)
+ 
+Phase 2: Enhanced MPC Integration (Months 7-12)
+-	•	Advanced MPC protocols (MASCOT, BMR) deployed
+-	•	Complex multi-party computations supported
+-	•	ZK proofs integrated with MPC for enhanced privacy
+-	•	Performance optimizations for MPC communication
+ 
+Phase 3: Full httpz Deployment (Year 2+)
+-	•	Classical crypto deprecated for new ships
+-	•	Full quantum resistance achieved
+-	•	Production-ready MPC applications
+-	•	Legacy support for transition period only
+ 
 ---
 
-## Performance Considerations
+##Protocol Specifications
 
-- **Computational**:  
-  - ML-KEM: ~10× ECDH  
-  - ML-DSA: ~50× ECDSA  
-  - SNARKs: ~100ms per proof  
-  - _Mitigation_: async crypto, caching
+New Packet Format (httpz v1.0)
+```
++--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+
+|version:1|crypto_suite:1|header:32|pq_kem_data:1088|mpc_session:64 |
++--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+
+|zk_proof:2048|payload:*|pq_signature:3309|mpc_share_proof:*|
++--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+
+```
+## Crypto Suite Negotiation (Extended)
+```
+0x00: Classical only (ECDH + ECDSA)
+0x01: Hybrid PQ (ECDH + ML-KEM, ECDSA + ML-DSA)  
+0x02: PQ only (ML-KEM + ML-DSA)
+0x03: httpz (PQ + ZK + MPC)
+0x04-0xFE: Reserved for future protocols
+0xFF: Emergency fallback mode
+## Security Analysis
+```
 
-- **Network Overhead**:  
-  - ~6KB per packet (PQ + ZK)  
-  - _Mitigation_: compression, batching
+## MPC Session Coordination Protocol
 
-- **Memory**:  
-  - PQ key: ~3KB  
-  - ZK setup: ~1MB  
-  - _Mitigation_: pruning, key derivation
+- 1	Party Discovery: Ship A broadcasts MPC computation request with circuit description
+-	2	Party Registration: Ships B,C,D respond with participation confirmations + ML-DSA signatures
+-	3	Key Setup: All parties perform distributed key generation using ML-KEM
+-	4	Secret Sharing: Input data split using Shamir's secret sharing or SPDZ protocol
+-	5	Computation: Execute MPC protocol (MASCOT/Semi2k/BMR) with communication via Ames
+-	6	Result Reconstruction: Combine shares to reveal final result with ZK proof of correctness
 
 ---
+## Implementation 
 
+Milestone 1: Multi-Crypto Foundation
+
+-	•	[ ] Integrate liboqs + libsnark + MP-SPDZ into Vere build system
+-	•	[ ] Implement basic ML-KEM/ML-DSA/ZK C interfaces
+-	•	[ ] Create comprehensive crypto test suite
+-	•	[ ] MP-SPDZ Python-to-C bridge for Urbit integration
+Milestone 2: Kernel Integration
+
+-	•	[ ] Add PQ + ZK + MPC cores to Zuse
+-	•	[ ] Extend Jael key management for all crypto types
+-	•	[ ] Implement new MPC vane for computation coordination
+-	•	[ ] Update ship lifecycle for multi-crypto key generation
+Milestone 3: httpz Protocol Implementation
+
+-	•	[ ] Implement hybrid Ames protocol with MPC session support
+-	•	[ ] Add packet format versioning and crypto suite negotiation
+-	•	[ ] Create MPC party discovery and coordination logic
+-	•	[ ] Implement basic MPC protocols (secure addition/multiplication)
+Milestone 4: Advanced MPC Integration
+
+-	•	[ ] Deploy MASCOT and Semi2k protocols for production use
+-	•	[ ] Implement ZK proofs for MPC computation verification
+-	•	[ ] Add support for complex MPC applications (private set intersection, federated learning)
+-	•	[ ] Performance optimization for MPC communication patterns
+Milestone 5: Testing & Security
+
+-	•	[ ] Performance benchmarking across all protocols
+- •	[ ] Network stress testing with multi-party computations
+-	•	[ ] Security audit of MPC implementations
+-	•	[ ] Formal verification of critical cryptographic components
+Milestone 6: Production Deployment
+
+-	•	[ ] Alpha testing with select ships running httpz protocol
+-	•	[ ] Beta network deployment with opt-in MPC computations
+-	•	[ ] Production rollout planning and network migration strategy
+-	•	[ ] Documentation and developer tools for MPC applications
+---
+## Performance Considerations & Resource Optimization
+
+Computational Overhead with Adaptive Solutions
+-	•	ML-KEM: ~10x slower than ECDH key generation
+-	◦	Mitigation: Pre-compute keypairs during idle time, cache frequently used keys
+-	•	ML-DSA: ~50x slower than ECDSA signing
+-	◦	Mitigation: Batch signature operations, use faster Level 1 parameters for non-critical operations
+-	•	SNARKs: ~100ms per proof generation, ~5ms verification
+-	◦	Mitigation: Proof amortization (batch multiple statements), recursive proofs for complex operations
+-	•	MPC Protocols:
+-	◦	MASCOT: ~1000x slower than local computation
+-	◦	Semi2k: ~100x slower, semi-honest security
+-	◦	BMR: ~10000x slower, Boolean circuits with malicious security
+- ◦	Mitigation: Adaptive protocol selection, offline preprocessing, computation scheduling
+
+## Tiered Performance Architecture
+Ship Class Performance Profiles
+```
+++  ship-performance-tier
+  $%  [%comet tier=%low]      :: IoT/mobile devices
+      [%moon tier=%medium]    :: Personal computers  
+      [%planet tier=%high]    :: Servers/workstations
+      [%star tier=%maximum]   :: Data centers
+      [%galaxy tier=%unlimited] :: Infrastructure nodes
+  ==
+```
+## Adaptive Protocol Selection Matrix
+<img width="691" height="187" alt="Screenshot 2025-08-04 at 13 52 34" src="https://github.com/user-attachments/assets/d2a91837-9ce0-4350-aef3-591dd46728fb" />
+
+## Network Overhead Optimization
+Smart Packet Compression
+-	•	Header Compression: Reduce repeated fields by 60-80%
+-	•	PQ Signature Compression: NIST-approved compression reduces ML-DSA signatures by ~30%
+-	•	ZK Proof Batching: Combine multiple proofs into single aggregate proof
+-	•	MPC Share Compression: Use polynomial commitment schemes
+
+## Bandwidth-Aware Communication
+```
+Estimated Bandwidth Requirements:
+- Comet (IoT): 10KB/s baseline, 50KB/s during MPC
+- Moon (Mobile): 100KB/s baseline, 500KB/s during MPC  
+- Planet (Broadband): 1MB/s baseline, 10MB/s during MPC
+- Star+ (Enterprise): Unlimited within reason
+---
+```
+## Resource-Constrained Device Support
+
+Lightweight httpz Mode (0x04)
+```
+[version:1][crypto_suite:0x04][minimal_header:16][ml_kem_768:1088][basic_payload:*][compressed_sig:2000]
+```
+
+	•	No ZK proofs for resource-constrained devices
+	•	Simplified MPC (addition/comparison only)
+	•	Level 1 PQ parameters (smaller keys, faster operations)
+	•	Fallback to classical crypto when PQ operations timeout
+ 
+## Computation Offloading Framework
+```
+++  mpc-offload
+  |%
+  ++  find-delegate  |=  computation=@  ^-  (unit @p)
+  ++  delegate-compute  |=  [delegate=@p computation=@ inputs=@]  ^-  @
+  ++  verify-result  |=  [result=@ proof=@]  ^-  ?
+  --
+```
+## Offloading Strategy:
+-	•	Comets can delegate heavy MPC computations to their sponsoring planet
+-	•	Moons leverage their planet's computational resources
+-	•	Planets form "computation pools" for resource sharing
+-	•	Stars provide computational services to their sponsored ships
+ 
 ## Security Analysis
 
-| Property       | Provided By    |
-|----------------|----------------|
-| Confidentiality | ML-KEM         |
-| Authenticity   | ML-DSA         |
-| Privacy        | SNARKs         |
-| Forward Secrecy| ML-KEM ephemeral keys |
+Threat Model
+-	•	Quantum Adversary: Capable of breaking classical ECDH/ECDSA using Shor's algorithm
+-	•	Classical Adversary: Still relevant during transition period
+-	•	Network Adversary: Can intercept and analyze all network traffic
+-	•	MPC Adversary: May corrupt up to t < n/2 parties (semi-honest) or t < n/3 (malicious)
+-	•	Colluding Adversary: Multiple compromised ships attempting to break MPC privacy
+ 
+Security Properties
+-	•	Confidentiality: ML-KEM provides quantum-safe key exchange
+-	•	Authenticity: ML-DSA ensures quantum-safe digital signatures
+-	•	Privacy: MPC protocols ensure inputs remain private during computation
+-	•	Verifiability: ZK proofs enable public verification without revealing sensitive data
+-	•	Forward Secrecy: Ephemeral keys prevent retroactive decryption
+-	•	Hybrid Security: Classical+PQ combination provides defense in depth
+ 
+MPC Security Guarantees
+-	•	Input Privacy: Parties can jointly compute functions over their inputs while keeping those inputs private
+-	•	Correctness: MP-SPDZ implements 34 MPC protocol variants with formal security guarantees
+-	•	Robustness: Computation continues even if some parties drop out (depending on protocol)
+-	•	Coercion Resistance: Parties cannot be forced to reveal their private inputs
+ 
+Risk Mitigation
+-	•	Algorithm Agility: Framework supports future algorithm updates
+-	•	Gradual Migration: Reduces risk of network fragmentation
+-	•	Fallback Mechanisms: Classical crypto available if PQ/MPC fails
+-	•	Threshold Security: MPC protocols tolerate Byzantine failures
+-	•	Formal Verification: Critical components use formally verified implementations
 
-Fallback to classical crypto supported during transition.
+ Backwards Compatibility 
+<img width="705" height="175" alt="Screenshot 2025-08-04 at 13 53 17" src="https://github.com/user-attachments/assets/4cfd30dd-5d35-4304-99df-cf25a115d215" />
 
----
+### Migration Path
+-	1	Ships update to hybrid-capable runtime
+-	2	Network negotiation determines optimal crypto suite
+-	3	Gradual transition to PQ-preferred mode
+-	4	Eventually deprecate classical-only support
+ 
+### Testing Strategy
 
-## Compatibility Matrix
+Unit Testing
+-	•	Crypto primitive correctness
+-	•	Key generation/validation
+-	•	Signature verification
+-	•	Interoperability testing
+ 
+Integration Testing
+-	•	End-to-end encrypted communication
+-	•	Handshake protocol validation
+-	•	Performance regression testing
+-	•	Memory usage profiling
+ 
+Network Testing
+-	•	Multi-ship PQ communication
+-	•	Mixed classical/PQ networks
+-	•	Failure mode testing
+-	•	Load testing with PQ overhead
+ 
+### Alternative Approaches Considered
 
-| Ship Version | Classical | Hybrid | httpz |
-|--------------|-----------|--------|--------|
-| Legacy       | ✓         | ✓      | ✗      |
-| Hybrid       | ✓         | ✓      | ✓      |
-| httpz-Ready  | ✓         | ✓      | ✓      |
+##Other PQ Algorithms
+-	•	CRYSTALS-Kyber/Dilithium: Chosen ML-KEM/ML-DSA are the standardized NIST versions
+-	•	FALCON: Smaller signatures but complex implementation and fragile security
+-	•	SPHINCS+: Stateless signatures but very large signature sizes (~50KB)
+ 
+##MPC Framework Alternatives
+-	•	Custom Implementation: Rejected due to complexity and security risks
+-	•	SCALE-MAMBA: Academic framework, less production-ready than MP-SPDZ
+-	•	Sharemind: Commercial solution, not open source
+-	•	MP-SPDZ: Selected for versatility, 34 protocol variants, active development
+ 
+##ZK Proof Systems
+-	•	STARKs: Larger proofs (~50KB) but transparent (no trusted setup)
+-	•	Bulletproofs: Range proofs but limited to specific applications
+-	•	Groth16 SNARKs: Selected for compact proofs (~2KB) and fast verification
+-	•	PLONK: More flexible but larger trusted setup requirements
+ 
+##Implementation Strategies
+-	•	PQ-Only: Rejected due to compatibility concerns
+-	•	MPC-Only: Rejected due to performance limitations
+-	•	Classical Fallback: Rejected due to security implications
+-	•	Integrated httpz Approach: Selected for optimal security/compatibility/functionality balance
 
----
+##Operational Impact
+-	•	Bandwidth Increase: 8-10x during MPC handshakes, 4-5x during ZK operations
+-	•	Compute Overhead:
+-	◦	PQ Operations: 10-50x increase
+-	◦	MPC Computations: 100-10000x depending on protocol and security model
+-	◦	ZK Proof Generation: ~100ms per proof
+- •	Storage Requirements: ~15KB per ship identity (all crypto keys + MPC credentials)
+ 
+##Long-term Benefits
+-	•	Future-Proofing: Comprehensive protection against quantum, privacy, and centralization threats
+-	•	Competitive Advantage: First decentralized OS with integrated PQ+ZK+MPC
+-	•	Risk Mitigation: Multi-layered security against diverse attack vectors
+-	•	Innovation Platform: Foundation for privacy-preserving decentralized applications
+-	•	Network Effects: Enhanced utility drives adoption and network value
+ 
+##Open Questions
+-	1	Algorithm Parameters: Optimal security level (Level 1 vs Level 3)
+-	2	Implementation Library: liboqs vs custom implementation?
+-	3	Key Rotation: Automatic vs manual PQ key updates?
+-	4	Compression: Worth implementing signature compression?
+-	5	Hybrid KDF: How to combine classical + PQ shared secrets?
+ 
+References
 
-## Testing Strategy
+	•	FIPS 203: ML-KEM https://csrc.nist.gov/publications/detail/fips/203/final
+	•	FIPS 204: ML-DSA https://csrc.nist.gov/publications/detail/fips/204/final
+	•	RFC-9421: HTTP Message Signatures https://datatracker.ietf.org/doc/html/rfc9421
+	•	RFC-9794: Terminology for Post-Quantum Traditional Hybrid Schemes https://datatracker.ietf.org/doc/rfc9794
+	•	Open Quantum Safe https://openquantumsafe.org
+	•	MP-SPDZ Framework Documentation https://mp-spdz.readthedocs.io/en/latest/
+	•	Secure Multi-Party Computation Wikipedia https://en.wikipedia.org/wiki/Secure_multi-party_computation
+	•	libsnark: C++ Library for zkSNARKs https://github.com/scipr-lab/libsnark
+	•	Urbit Cryptography Reference https://urbit.org/understanding-urbit/urbit-id/crypto
+	•	NIST Post-Quantum Cryptography Standardization https://csrc.nist.gov/projects/post-quantum-cryptography
+	•	Groth16: On the Size of Pairing-based Non-interactive Arguments https://eprint.iacr.org/2016/260.pdf
+	•	MASCOT: Faster Malicious Arithmetic Secure Computation with Oblivious Transfer https://eprint.iacr.org/2016/505.pdf
+ 
+Acknowledgments
+Special thanks to the Urbit core development team, the post-quantum cryptography research community, and NIST for their standardization efforts.
 
-- **Unit Tests**: ML-KEM, ML-DSA, SNARKs
-- **Integration**: Full handshake, end-to-end httpz
-- **Network Tests**: Mixed crypto suite ship comms
 
----
-
-## Implementation Timeline
-
-| Month | Task                                     |
-|--------|------------------------------------------|
-| 1      | Integrate liboqs + libsnark into Vere   |
-| 2      | Build Hoon cores, Ames integration      |
-| 3      | SNARK circuit design, testing           |
-| 4      | Network stress tests                    |
-| 5–6    | Alpha + beta testing, security audits   |
-
----
-
-## Alternatives Considered
-
-- **PQ Algorithms**: Kyber/Dilithium (used), FALCON (fragile), SPHINCS+ (bulky)
-- **ZK Proofs**: STARKs (larger, transparent) vs. SNARKs (compact)
-- **Implementation Path**: Gall (simple) vs. Ames (robust)
-
----
-
-## Open Questions Resolved
-
-- **Algo Parameters**: Level 3 for all; Level 5 for galaxies  
-- **Libraries**: `liboqs`, `libsnark`  
-- **Rotation**: Every 12 months (via Jael)  
-- **Compression**: SNARK compression; STARKs optional  
-- **Hybrid KDF**: HKDF of classical + PQ secrets
-
----
-
-## References
-
-- [FIPS 203: ML-KEM](https://csrc.nist.gov/publications/detail/fips/203/final)  
-- [FIPS 204: ML-DSA](https://csrc.nist.gov/publications/detail/fips/204/final)  
-- [RFC-9421: HTTP Message Signatures](https://datatracker.ietf.org/doc/html/rfc9421)  
-- [Open Quantum Safe](https://openquantumsafe.org)  
-- [libsnark](https://github.com/scipr-lab/libsnark)  
-- [Urbit Cryptography](https://urbit.org/understanding-urbit/urbit-id/crypto)
-
----
-
-## Acknowledgments
-
-Thanks to the Urbit core team, NIST, and the ZK research community.
